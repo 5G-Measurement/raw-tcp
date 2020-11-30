@@ -64,7 +64,7 @@ int main(int argc,char **argv) {
 	char* packet;
 	int packet_len;
 	create_syn_packet(&saddr, &daddr, &packet, &packet_len);
-    // char request[] = "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
+    // char request[] = "Hello there!";
 	// create_data_packet(&saddr, &daddr, 345, 765, request, sizeof(request) - 1/sizeof(char), &packet, &packet_len);
 
 	int sent;
@@ -96,18 +96,6 @@ int main(int argc,char **argv) {
 		gettimeofday(&currentTime);
 		relativeTime = (currentTime.tv_sec-startTime.tv_sec)+(currentTime.tv_usec-startTime.tv_usec)/1000000.0;
 		fprintf(fptr, "%f, %d\n", relativeTime, r_size);
-		// do {
-		// 	int receive = recvfrom(sock, recvbuf, sizeof(recvbuf), 0, NULL, NULL);
-		// 	memcpy(&d_port, recv + 22, sizeof(d_port));
-		// 	if (receive <= 0) {
-		// 		printf("receive failed\n");
-		// 		return 1;
-		// 	}
-		// 	memcpy(&d_port, recvbuf + 22, sizeof(d_port));
-		// 	printf("got packet on port: %u : %u\n", d_port, saddr.sin_port);
-		// }
-		// while (d_port != saddr.sin_port);
-		// printf("YES: got packet on port: %u : %u\n", d_port, saddr.sin_port);
 	}
 	
     fclose(fptr);

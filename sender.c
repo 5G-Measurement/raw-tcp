@@ -57,7 +57,7 @@ int main(int argc, char** argv)
   	memset(&clientAddr, 0, sizeof(struct sockaddr_in));
   	socklen_t clientAddrLen = sizeof(clientAddr);
     
-    unsigned short d_port;
+    unsigned short d_port, s_port;
 	int received = 0;
     char recvbuf[DATAGRAM_LEN];
     char clientip[INET_ADDRSTRLEN];
@@ -66,18 +66,18 @@ int main(int argc, char** argv)
 	BYTE * data = (BYTE *) malloc(DATAGRAM_LEN);
 	do {
 		int receive = recvfrom(sock, recvbuf, sizeof(recvbuf), 0, (struct sockaddr *) &clientAddr, &clientAddrLen);
-        memcpy(&d_port, recv + 22, sizeof(d_port));
 		if (receive <= 0) {
 			printf("receive failed\n");
 			return 1;
 		}
         memcpy(&d_port, recvbuf + 22, sizeof(d_port));
+		memcpy(&s_port, recvbuf + 20, sizeof(s_port));
         // printf("got packet on port: %u : %u\n", d_port, adr_inet.sin_port);
 	}
     while (d_port != adr_inet.sin_port);
 	inet_ntop(AF_INET, &(clientAddr.sin_addr), clientip, INET_ADDRSTRLEN);
-	printf("connected to: %s , bytes : %d\n", clientip, received);
-	clientAddr.sin_port = htons(atoi(argv[2]));
+	printf("connected to: %s , port : %d\n", clientip, ntohs(s_port));
+	clientAddr.sin_port = s_port;
 
     char* packet;
 	int packet_len;
