@@ -1,5 +1,33 @@
 # raw-tcp
 
+## build and run
+
+```bash
+gcc sender.c -o sender.out
+gcc reciever.c -o receiver.out
+```
+
+Run sender(server)
+
+```bash
+sudo ./sender.out [listen-port] [duration]
+```
+
+Run receiver(mobile/client)
+
+give any filename (i removed logging for debugging purposes)
+```bash
+sudo ./receiver.out [source-ip] [target-ip] [dest-port] [duration] [filename]
+```
+
+The kernel does send a RST packet when it receives something to an
+unknown socket destination which is the case with raw sockets. To
+prevent this we simply block all outgoing RST packets.
+
+```bash
+sudo ./run.sh
+```
+
 ## Implementation Details
 
 ### sender
@@ -27,3 +55,4 @@
 7. recv syn-ack
 8. send an ack packet
 9. start listening for data and send acks
+
