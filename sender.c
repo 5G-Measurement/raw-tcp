@@ -88,18 +88,22 @@ int main(int argc, char** argv)
 	struct timeval startTime;
 	struct timeval currentTime;
 	double relativeTime=0;
+	int i = 0;
 	
 	gettimeofday(&startTime,NULL);
 	create_data_packet(&adr_inet, &clientAddr, 33, 45, request, 1440, &packet, &packet_len);
     while (relativeTime <= timeToRun) {
+		create_data_packet(&adr_inet, &clientAddr, 33 + i, 45 + i, request, 1440, &packet, &packet_len);
         if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&clientAddr, sizeof(struct sockaddr))) == -1)
         {
             printf("send failed\n");
             return 0;
         }
-		usleep(10);
+		// usleep(10);
 		gettimeofday(&currentTime);
 		relativeTime = (currentTime.tv_sec-startTime.tv_sec)+(currentTime.tv_usec-startTime.tv_usec)/1000000.0;
+		i++;
+		free(packet);
         // else
         // {
         //     printf("successfully sent %d bytes to %u from %u\n", sent, clientAddr.sin_port, adr_inet.sin_port);
