@@ -7,7 +7,7 @@ int main(int argc,char **argv) {
     if (argc != 6)
 	{
 		printf("invalid parameters.\n");
-		printf("USAGE %s <source-ip> <target-ip> <port> <duration> <filename>\n", argv[0]);
+		printf("USAGE %s <source-ip> <target-ip> <dest-port> <duration> <filename>\n", argv[0]);
 		return 1;
 	}
 
@@ -35,7 +35,7 @@ int main(int argc,char **argv) {
 	// source IP address configuration
 	struct sockaddr_in saddr;
 	saddr.sin_family = AF_INET;
-	saddr.sin_port = htons(rand() % 65535); // random client port
+	saddr.sin_port = htons(atoi(argv[2])); // random client port
 	if (inet_pton(AF_INET, argv[1], &saddr.sin_addr) != 1)
 	{
 		printf("source IP configuration failed\n");
@@ -111,18 +111,6 @@ int main(int argc,char **argv) {
 		printf("successfully sent %d bytes ACK!\n", sent);
 	}
 
-	// // send data
-	// char request[] = "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
-	// create_data_packet(&saddr, &daddr, ack_num, new_seq_num, request, sizeof(request) - 1/sizeof(char), &packet, &packet_len);
-	// if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&daddr, sizeof(struct sockaddr))) == -1)
-	// {
-	// 	printf("send failed\n");
-	// }
-	// else
-	// {
-	// 	printf("successfully sent %d bytes PSH!\n", sent);
-	// }
-
 	// receive data
 
 	struct timeval startTime;
@@ -149,7 +137,6 @@ int main(int argc,char **argv) {
 		relativeTime = (currentTime.tv_sec-startTime.tv_sec)+(currentTime.tv_usec-startTime.tv_usec)/1000000.0;
 	}
 
-	// TODO: handle FIN packets to close the connection properly
 
 	close(sock);
 	return 0;

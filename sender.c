@@ -2,13 +2,13 @@
 
 int main(int argc, char** argv)
 {
-	if (argc != 4)
+	if (argc != 3)
 	{
 		printf("invalid parameters.\n");
-		printf("USAGE %s <listen-port> <send-port> <duration>\n", argv[0]);
+		printf("USAGE %s <listen-port> <duration>\n", argv[0]);
 		return 1;
 	}
-	double timeToRun = strtod(argv[3], NULL) + 1.0; // stop a little after the receiver finishes
+	double timeToRun = strtod(argv[2], NULL) + 1.0; // stop a little after the receiver finishes
 	srand(time(NULL));
 
 	int sock = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
@@ -151,10 +151,6 @@ int main(int argc, char** argv)
 
 		read_seq_and_ack(recvbuf, &seq_num, &ack_num);
 		new_seq_num = seq_num + 1;
-        // else
-        // {
-        //     printf("successfully sent %d bytes to %u from %u\n", sent, clientAddr.sin_port, adr_inet.sin_port);
-        // }
 		sleep(1);
     }
 	

@@ -13,8 +13,17 @@
     |  (20 Bytes) | src_port (2 Bytes) dest_port(2 Bytes) ....|
     |   IP        |   TCP                                     |  Payload
 
-6. get client address from the packet received.
-7. construct a raw tcp/ip packet and include data to send as payload.
-8. keep sending the data
+6. the first packet received will be a syn packet
+7. respond with syn -ack
+8. listen for ack packet
+9. start sending data wihout rate limiting (for now 1 sec interval for testing and debugging)
 
 ### receiver
+1. create a raw socket with IPPROTO_TCP so that kernel forwards all incoming TCP packets to this socket.
+2. initialize sockaddr_in to start listening from all address
+3. optional: call bind (doesn't make a difference for raw socket)
+4. explicitly tell the kernel that headers will be passed with data
+6. send a syn packet to the server
+7. recv syn-ack
+8. send an ack packet
+9. start listening for data and send acks
