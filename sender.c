@@ -51,7 +51,7 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	printf("server listening on port %u\n", adr_inet.sin_port);
+	printf("server listening on port %u\n", ntohs(adr_inet.sin_port));
 
 	struct sockaddr_in clientAddr;
   	memset(&clientAddr, 0, sizeof(struct sockaddr_in));
@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-		printf("successfully sent %d bytes ACK!\n", sent);
+		printf("successfully sent %d bytes SYN ACK to port %s \n", ntohs(clientAddr.sin_port));
 	}
 
 	// receive ACK packet
@@ -130,7 +130,7 @@ int main(int argc, char** argv)
 		}
 		else
 		{
-			printf("successfully sent %d bytes PSH!\n", sent);
+			printf("successfully sent %d bytes PSH to port %s\n", sent, ntohs(clientAddr.sin_port));
 		}
 		
 		gettimeofday(&currentTime);
