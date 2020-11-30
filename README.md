@@ -2,7 +2,7 @@
 
 ## Issue
 
-As of now, the implementation works on local network but when the sender sends the syn-ack packet, the client doesn't receive it.
+As of now, the implementation works on local network but on a remote setup, when the sender sends the syn-ack packet, the client doesn't receive it.
 
 ## build and run
 
