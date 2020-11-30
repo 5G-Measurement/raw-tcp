@@ -66,16 +66,20 @@ int main(int argc,char **argv) {
 	create_syn_packet(&saddr, &daddr, &packet, &packet_len);
     // char request[] = "Hello there!";
 	// create_data_packet(&saddr, &daddr, 345, 765, request, sizeof(request) - 1/sizeof(char), &packet, &packet_len);
-
-	int sent;
-	if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&daddr, sizeof(struct sockaddr))) == -1)
-	{
-		printf("sendto() failed\n");
+	int startPkts = 5;
+	while (startPkts > 0) {
+		int sent;
+		if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&daddr, sizeof(struct sockaddr))) == -1)
+		{
+			printf("sendto() failed\n");
+		}
+		else
+		{
+			printf("successfully sent %d bytes SYN to %u from %u\n", sent, daddr.sin_port, saddr.sin_port);
+		}
+		startPkts--;
 	}
-	else
-	{
-		printf("successfully sent %d bytes SYN to %u from %u\n", sent, daddr.sin_port, saddr.sin_port);
-	}
+	
 
     unsigned short d_port;
 	int received = 0;
