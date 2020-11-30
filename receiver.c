@@ -4,21 +4,14 @@
 
 int main(int argc,char **argv) {
 
-    if (argc != 7)
+    if (argc != 6)
 	{
 		printf("invalid parameters.\n");
-		printf("USAGE %s <source-ip> <target-ip> <src-port> <target-port> <file-name> <duration>\n", argv[0]);
+		printf("USAGE %s <source-ip> <target-ip> <port> <duration> <filename>\n", argv[0]);
 		return 1;
 	}
-	double timeToRun = strtod(argv[6], NULL);
-	printf("%f\n", timeToRun);
-    FILE *fptr;
-    fptr = fopen(argv[5], "w");
-    // exiting program 
-    if (fptr == NULL) {
-        printf("Error!");
-        exit(1);
-    };
+
+	double timeToRun = strtod(argv[4], NULL);
 
 	srand(time(NULL));
 
@@ -32,7 +25,7 @@ int main(int argc,char **argv) {
 	// destination IP address configuration
 	struct sockaddr_in daddr;
 	daddr.sin_family = AF_INET;
-	daddr.sin_port = htons(atoi(argv[4]));
+	daddr.sin_port = htons(atoi(argv[3]));
 	if (inet_pton(AF_INET, argv[2], &daddr.sin_addr) != 1)
 	{
 		printf("destination IP configuration failed\n");
@@ -42,14 +35,28 @@ int main(int argc,char **argv) {
 	// source IP address configuration
 	struct sockaddr_in saddr;
 	saddr.sin_family = AF_INET;
-	saddr.sin_port = htons(atoi(argv[3])); // random client port
+	saddr.sin_port = htons(rand() % 65535); // random client port
 	if (inet_pton(AF_INET, argv[1], &saddr.sin_addr) != 1)
 	{
 		printf("source IP configuration failed\n");
 		return 1;
 	}
-	
-	printf("client listening on %u[%s], dest port is %u[%s]\n", saddr.sin_port, argv[3], daddr.sin_port, argv[4]);
+
+	// // call bind with port number specified as zero to get an unused source port
+	// if (bind(sock, (struct sockaddr*)&saddr, sizeof(struct sockaddr)) == -1)
+	// {
+	// 	printf("bind() failed\n");
+	// 	return 1;
+	// }
+
+	// // retrieve source port
+	// socklen_t addrLen = sizeof(struct sockaddr);
+	// if (getsockname(sock, (struct sockaddr*)&saddr, &addrLen) == -1)
+	// {
+	// 	printf("getsockname() failed\n");
+	// 	return 1;
+	// }
+	printf("selected source port number: %d\n", ntohs(saddr.sin_port));
 
 	// tell the kernel that headers are included in the packet
 	int one = 1;
@@ -64,46 +71,86 @@ int main(int argc,char **argv) {
 	char* packet;
 	int packet_len;
 	create_syn_packet(&saddr, &daddr, &packet, &packet_len);
-    // char request[] = "Hello there!";
-	// create_data_packet(&saddr, &daddr, 345, 765, request, sizeof(request) - 1/sizeof(char), &packet, &packet_len);
-	int startPkts = 5;
-	while (startPkts > 0) {
-		int sent;
-		if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&daddr, sizeof(struct sockaddr))) == -1)
-		{
-			printf("sendto() failed\n");
-		}
-		else
-		{
-			printf("successfully sent %d bytes SYN to %u from %u\n", sent, daddr.sin_port, saddr.sin_port);
-		}
-		startPkts--;
+
+	int sent;
+	if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&daddr, sizeof(struct sockaddr))) == -1)
+	{
+		printf("sendto() failed\n");
 	}
-	
+	else
+	{
+		printf("successfully sent %d bytes SYN!\n", sent);
+	}
 
-    unsigned short d_port;
-	int received = 0;
-    char recvbuf[DATAGRAM_LEN];
-    char clientip[INET_ADDRSTRLEN];
+	// receive SYN-ACK
+	char recvbuf[DATAGRAM_LEN];
+	int received = receive_from(sock, recvbuf, sizeof(recvbuf), &saddr);
+	if (received <= 0)
+	{
+		printf("receive_from() failed\n");
+	}
+	else
+	{
+		printf("successfully received %d bytes SYN-ACK!\n", received);
+	}
 
-    printf("client receiving data on port %u\n", saddr.sin_port);
+	// read sequence number to acknowledge in next packet
+	uint32_t seq_num, ack_num;
+	read_seq_and_ack(recvbuf, &seq_num, &ack_num);
+	int new_seq_num = seq_num + 1;
+
+	// send ACK
+	// previous seq number is used as ack number and vica vera
+	create_ack_packet(&saddr, &daddr, ack_num, new_seq_num, &packet, &packet_len);
+	if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&daddr, sizeof(struct sockaddr))) == -1)
+	{
+		printf("sendto() failed\n");
+	}
+	else
+	{
+		printf("successfully sent %d bytes ACK!\n", sent);
+	}
+
+	// // send data
+	// char request[] = "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
+	// create_data_packet(&saddr, &daddr, ack_num, new_seq_num, request, sizeof(request) - 1/sizeof(char), &packet, &packet_len);
+	// if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&daddr, sizeof(struct sockaddr))) == -1)
+	// {
+	// 	printf("send failed\n");
+	// }
+	// else
+	// {
+	// 	printf("successfully sent %d bytes PSH!\n", sent);
+	// }
+
+	// receive data
 
 	struct timeval startTime;
 	struct timeval currentTime;
 	double relativeTime=0;
-	
+	int i = 0;
 	gettimeofday(&startTime,NULL);
-	fprintf(fptr, "time, size\n");
-    
-	while (relativeTime <= timeToRun) {
-		int r_size = receive_from(sock, recvbuf, sizeof(recvbuf), &saddr);
+	while (relativeTime <= timeToRun)
+	{
+		received = receive_from(sock, recvbuf, sizeof(recvbuf), &saddr);
+		printf("successfully received %d bytes!\n", received);
+		read_seq_and_ack(recvbuf, &seq_num, &ack_num);
+		new_seq_num = seq_num + 1;
+		create_ack_packet(&saddr, &daddr, ack_num, new_seq_num, &packet, &packet_len);
+		if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&daddr, sizeof(struct sockaddr))) == -1)
+		{
+			printf("send failed\n");
+		}
+		else
+		{
+			printf("successfully sent %d bytes ACK!\n", sent);
+		}
 		gettimeofday(&currentTime);
 		relativeTime = (currentTime.tv_sec-startTime.tv_sec)+(currentTime.tv_usec-startTime.tv_usec)/1000000.0;
-		fprintf(fptr, "%f, %d\n", relativeTime, r_size);
 	}
-	
-    fclose(fptr);
-    printf("Client exiting \n");
-    close(sock);
-    return 0;
+
+	// TODO: handle FIN packets to close the connection properly
+
+	close(sock);
+	return 0;
 }

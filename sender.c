@@ -62,7 +62,7 @@ int main(int argc, char** argv)
     char recvbuf[DATAGRAM_LEN];
     char clientip[INET_ADDRSTRLEN];
 
-
+	// Receive SYN Packet
 	BYTE * data = (BYTE *) malloc(DATAGRAM_LEN);
 	do {
 		int receive = recvfrom(sock, recvbuf, sizeof(recvbuf), 0, (struct sockaddr *) &clientAddr, &clientAddrLen);
@@ -79,35 +79,83 @@ int main(int argc, char** argv)
 	printf("connected to: %s , port : %d\n", clientip, ntohs(s_port));
 	clientAddr.sin_port = s_port;
 
-    char* packet;
+	char* packet;
 	int packet_len;
     int sent;
-	char* request = malloc(1500);
-	// // send data
+
+	// read sequence number to acknowledge in next packet
+	uint32_t seq_num, ack_num;
+	read_seq_and_ack(recvbuf, &seq_num, &ack_num);
+	int new_seq_num = seq_num + 1;
+
+	// Send SYN-ACK Packet
+	create_syn_ack_packet(&adr_inet, &clientAddr, new_seq_num, &packet, &packet_len);
+	if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&clientAddr, sizeof(struct sockaddr))) == -1)
+	{
+		printf("sendto() failed\n");
+	}
+	else
+	{
+		printf("successfully sent %d bytes ACK!\n", sent);
+	}
+
+	// receive ACK packet
+	received = receive_from(sock, recvbuf, sizeof(recvbuf), &clientAddr);
+	if (received <= 0)
+	{
+		printf("receive_from() failed\n");
+	}
+	else
+	{
+		printf("successfully received %d bytes SYN-ACK!\n", received);
+	}
+
+	read_seq_and_ack(recvbuf, &seq_num, &ack_num);
+	new_seq_num = seq_num + 1;
+    
 
 	struct timeval startTime;
 	struct timeval currentTime;
 	double relativeTime=0;
 	int i = 0;
-	
+	char request[] = "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
 	gettimeofday(&startTime,NULL);
-	create_data_packet(&adr_inet, &clientAddr, 33, 45, request, 1440, &packet, &packet_len);
     while (relativeTime <= timeToRun) {
-		create_data_packet(&adr_inet, &clientAddr, 33 + i, 45 + i, request, 1440, &packet, &packet_len);
-        if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&clientAddr, sizeof(struct sockaddr))) == -1)
-        {
-            printf("send failed\n");
-            return 0;
-        }
-		// usleep(10);
+		// send data
+	
+		create_data_packet(&adr_inet, &clientAddr, ack_num, new_seq_num, request, sizeof(request) - 1/sizeof(char), &packet, &packet_len);
+		if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&clientAddr, sizeof(struct sockaddr))) == -1)
+		{
+			printf("send failed\n");
+		}
+		else
+		{
+			printf("successfully sent %d bytes PSH!\n", sent);
+		}
+		
 		gettimeofday(&currentTime);
 		relativeTime = (currentTime.tv_sec-startTime.tv_sec)+(currentTime.tv_usec-startTime.tv_usec)/1000000.0;
 		i++;
 		free(packet);
+
+		// receive ACK packet
+		received = receive_from(sock, recvbuf, sizeof(recvbuf), &clientAddr);
+		if (received <= 0)
+		{
+			printf("receive_from() failed\n");
+		}
+		else
+		{
+			printf("successfully received %d bytes SYN-ACK!\n", received);
+		}
+
+		read_seq_and_ack(recvbuf, &seq_num, &ack_num);
+		new_seq_num = seq_num + 1;
         // else
         // {
         //     printf("successfully sent %d bytes to %u from %u\n", sent, clientAddr.sin_port, adr_inet.sin_port);
         // }
+		sleep(1);
     }
 	
 	close(sock);
