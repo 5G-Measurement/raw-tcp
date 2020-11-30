@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-		printf("successfully sent %d bytes SYN ACK to port %s \n", ntohs(clientAddr.sin_port));
+		printf("successfully sent %d bytes SYN ACK to port %d \n", sent,  ntohs(clientAddr.sin_port));
 	}
 
 	// receive ACK packet
@@ -130,7 +130,7 @@ int main(int argc, char** argv)
 		}
 		else
 		{
-			printf("successfully sent %d bytes PSH to port %s\n", sent, ntohs(clientAddr.sin_port));
+			printf("successfully sent %d bytes PSH to port %d\n", sent, ntohs(clientAddr.sin_port));
 		}
 		
 		gettimeofday(&currentTime);
