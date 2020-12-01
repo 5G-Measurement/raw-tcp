@@ -18,6 +18,13 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	int u_sock = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+	if (u_sock == -1)
+	{
+		printf("socket creation failed\n");
+		return 1;
+	}
+
 	struct sockaddr_in adr_inet;
 	socklen_t len_inet;
 	memset(&adr_inet,0,sizeof adr_inet);
@@ -35,11 +42,11 @@ int main(int argc, char** argv)
 	len_inet = sizeof(struct sockaddr_in);
 
     // call bind with port number specified as zero to get an unused source port
-	if (bind(sock, (struct sockaddr*)&adr_inet, sizeof(struct sockaddr)) == -1)
-	{
-		printf("bind() failed\n");
-		return 1;
-	}
+	// if (bind(sock, (struct sockaddr*)&adr_inet, sizeof(struct sockaddr)) == -1)
+	// {
+	// 	printf("bind() failed\n");
+	// 	return 1;
+	// }
 
 
     // tell the kernel that headers are included in the packet
@@ -49,7 +56,7 @@ int main(int argc, char** argv)
 	{
 		printf("setsockopt(IP_HDRINCL, 1) failed\n");
 		return 1;
-	}
+	};
 
 	printf("server listening on port %u\n", ntohs(adr_inet.sin_port));
 
@@ -90,7 +97,7 @@ int main(int argc, char** argv)
 
 	// Send SYN-ACK Packet
 	create_syn_ack_packet(&adr_inet, &clientAddr, new_seq_num, &packet, &packet_len);
-	if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&clientAddr, sizeof(struct sockaddr))) == -1)
+	if ((sent = sendto(u_sock, packet, packet_len, 0, (struct sockaddr*)&clientAddr, sizeof(struct sockaddr))) == -1)
 	{
 		printf("sendto() failed\n");
 	}
@@ -100,14 +107,14 @@ int main(int argc, char** argv)
 	}
 
 	// receive ACK packet
-	received = receive_from(sock, recvbuf, sizeof(recvbuf), &clientAddr);
+	received = receive_from(sock, recvbuf, sizeof(recvbuf), &adr_inet);
 	if (received <= 0)
 	{
 		printf("receive_from() failed\n");
 	}
 	else
 	{
-		printf("successfully received %d bytes SYN-ACK!\n", received);
+		printf("successfully received %d bytes ACK!\n", received);
 	}
 
 	read_seq_and_ack(recvbuf, &seq_num, &ack_num);
@@ -124,7 +131,7 @@ int main(int argc, char** argv)
 		// send data
 	
 		create_data_packet(&adr_inet, &clientAddr, ack_num, new_seq_num, request, sizeof(request) - 1/sizeof(char), &packet, &packet_len);
-		if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&clientAddr, sizeof(struct sockaddr))) == -1)
+		if ((sent = sendto(u_sock, packet, packet_len, 0, (struct sockaddr*)&clientAddr, sizeof(struct sockaddr))) == -1)
 		{
 			printf("send failed\n");
 		}
@@ -139,14 +146,14 @@ int main(int argc, char** argv)
 		free(packet);
 
 		// receive ACK packet
-		received = receive_from(sock, recvbuf, sizeof(recvbuf), &clientAddr);
+		received = receive_from(sock, recvbuf, sizeof(recvbuf), &adr_inet);
 		if (received <= 0)
 		{
 			printf("receive_from() failed\n");
 		}
 		else
 		{
-			printf("successfully received %d bytes SYN-ACK!\n", received);
+			printf("successfully received %d bytes ACK!\n", received);
 		}
 
 		read_seq_and_ack(recvbuf, &seq_num, &ack_num);

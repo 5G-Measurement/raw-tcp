@@ -317,7 +317,7 @@ void read_seq_and_ack(const char* packet, uint32_t* seq, uint32_t* ack)
 	*seq = ntohl(seq_num);
 	*ack = ntohl(ack_num);
 	printf("sequence number: %lu\n", (unsigned long)*seq);
-	printf("acknowledgement number: %lu\n", (unsigned long)*seq);
+	printf("acknowledgement number: %lu\n", (unsigned long)*ack);
 
 }
 
