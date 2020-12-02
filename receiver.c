@@ -22,13 +22,6 @@ int main(int argc,char **argv) {
 		return 1;
 	}
 
-	int u_sock = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
-	if (sock == -1)
-	{
-		printf("socket creation failed\n");
-		return 1;
-	}
-
 	// destination IP address configuration
 	struct sockaddr_in daddr;
 	daddr.sin_family = AF_INET;
@@ -74,19 +67,13 @@ int main(int argc,char **argv) {
 		return 1;
 	}
 
-	if (setsockopt(u_sock, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) == -1)
-	{
-		printf("setsockopt UDP (IP_HDRINCL, 1) failed\n");
-		return 1;
-	}
-
 	// send SYN
 	char* packet;
 	int packet_len;
 	create_syn_packet(&saddr, &daddr, &packet, &packet_len);
 
 	int sent;
-	if ((sent = sendto(u_sock, packet, packet_len, 0, (struct sockaddr*)&daddr, sizeof(struct sockaddr))) == -1)
+	if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&daddr, sizeof(struct sockaddr))) == -1)
 	{
 		printf("sendto() failed\n");
 	}
@@ -115,7 +102,7 @@ int main(int argc,char **argv) {
 	// send ACK
 	// previous seq number is used as ack number and vica vera
 	create_ack_packet(&saddr, &daddr, ack_num, new_seq_num, &packet, &packet_len);
-	if ((sent = sendto(u_sock, packet, packet_len, 0, (struct sockaddr*)&daddr, sizeof(struct sockaddr))) == -1)
+	if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&daddr, sizeof(struct sockaddr))) == -1)
 	{
 		printf("sendto() failed\n");
 	}
@@ -138,7 +125,7 @@ int main(int argc,char **argv) {
 		read_seq_and_ack(recvbuf, &seq_num, &ack_num);
 		new_seq_num = seq_num + 1;
 		create_ack_packet(&saddr, &daddr, ack_num, new_seq_num, &packet, &packet_len);
-		if ((sent = sendto(u_sock, packet, packet_len, 0, (struct sockaddr*)&daddr, sizeof(struct sockaddr))) == -1)
+		if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&daddr, sizeof(struct sockaddr))) == -1)
 		{
 			printf("send failed\n");
 		}
