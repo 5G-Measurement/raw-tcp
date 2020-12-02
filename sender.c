@@ -18,13 +18,6 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	int u_sock = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
-	if (u_sock == -1)
-	{
-		printf("socket creation failed\n");
-		return 1;
-	}
-
 	struct sockaddr_in adr_inet;
 	socklen_t len_inet;
 	memset(&adr_inet,0,sizeof adr_inet);
@@ -52,6 +45,12 @@ int main(int argc, char** argv)
     // tell the kernel that headers are included in the packet
 	int one = 1;
 	const int *val = &one;
+	if (setsockopt(sock, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) == -1)
+	{
+		printf("setsockopt(IP_HDRINCL, 1) failed\n");
+		return 1;
+	};
+
 	if (setsockopt(sock, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) == -1)
 	{
 		printf("setsockopt(IP_HDRINCL, 1) failed\n");
@@ -97,7 +96,7 @@ int main(int argc, char** argv)
 
 	// Send SYN-ACK Packet
 	create_syn_ack_packet(&adr_inet, &clientAddr, new_seq_num, &packet, &packet_len);
-	if ((sent = sendto(u_sock, packet, packet_len, 0, (struct sockaddr*)&clientAddr, sizeof(struct sockaddr))) == -1)
+	if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&clientAddr, sizeof(struct sockaddr))) == -1)
 	{
 		printf("sendto() failed\n");
 	}
@@ -131,7 +130,7 @@ int main(int argc, char** argv)
 		// send data
 	
 		create_data_packet(&adr_inet, &clientAddr, ack_num, new_seq_num, request, sizeof(request) - 1/sizeof(char), &packet, &packet_len);
-		if ((sent = sendto(u_sock, packet, packet_len, 0, (struct sockaddr*)&clientAddr, sizeof(struct sockaddr))) == -1)
+		if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&clientAddr, sizeof(struct sockaddr))) == -1)
 		{
 			printf("send failed\n");
 		}

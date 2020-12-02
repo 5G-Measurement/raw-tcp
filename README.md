@@ -46,7 +46,7 @@ sudo ./run.sh
     |   IP        |   TCP                                     |  Payload
 
 6. the first packet received will be a syn packet
-7. respond with syn -ack
+7. respond with syn-ack
 8. listen for ack packet
 9. start sending data wihout rate limiting (for now 1 sec interval for testing and debugging)
 
