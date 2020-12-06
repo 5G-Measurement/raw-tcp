@@ -139,7 +139,7 @@ int main(int argc, char** argv)
 			printf("successfully sent %d bytes PSH to port %d\n", sent, ntohs(clientAddr.sin_port));
 		}
 		
-		gettimeofday(&currentTime);
+		gettimeofday(&currentTime, NULL);
 		relativeTime = (currentTime.tv_sec-startTime.tv_sec)+(currentTime.tv_usec-startTime.tv_usec)/1000000.0;
 		i++;
 		free(packet);

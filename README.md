@@ -8,7 +8,7 @@ As of now, the implementation works on local network but on a remote setup, when
 
 ```bash
 gcc sender.c -o sender.out
-gcc reciever.c -o receiver.out
+gcc receiver.c -o receiver.out
 ```
 
 Run sender(server)
@@ -30,6 +30,12 @@ prevent this we simply block all outgoing RST packets.
 
 ```bash
 sudo ./run.sh
+```
+
+To reset the rule after the experiment:
+
+```bash
+sudo ./stop.sh
 ```
 
 ## Implementation Details
