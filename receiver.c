@@ -4,14 +4,21 @@
 
 int main(int argc,char **argv) {
 
-    if (argc != 6)
+    if (argc != 7)
 	{
 		printf("invalid parameters.\n");
-		printf("USAGE %s <source-ip> <target-ip> <dest-port> <duration> <filename>\n", argv[0]);
+		printf("USAGE %s <source-ip> <target-ip> <src-port> <dest-port> <duration> <filename>\n", argv[0]);
 		return 1;
 	}
 
-	double timeToRun = strtod(argv[4], NULL);
+	double timeToRun = strtod(argv[5], NULL);
+	FILE *fptr;
+    fptr = fopen(argv[6], "w");
+    // exiting program
+    if (fptr == NULL) {
+        printf("Error!");
+        exit(1);
+    };
 
 	srand(time(NULL));
 
@@ -25,7 +32,7 @@ int main(int argc,char **argv) {
 	// destination IP address configuration
 	struct sockaddr_in daddr;
 	daddr.sin_family = AF_INET;
-	daddr.sin_port = htons(atoi(argv[3]));
+	daddr.sin_port = htons(atoi(argv[4]));
 	if (inet_pton(AF_INET, argv[2], &daddr.sin_addr) != 1)
 	{
 		printf("destination IP configuration failed\n");
@@ -35,7 +42,7 @@ int main(int argc,char **argv) {
 	// source IP address configuration
 	struct sockaddr_in saddr;
 	saddr.sin_family = AF_INET;
-	saddr.sin_port = htons(36001); // random client port
+	saddr.sin_port = htons(atoi(argv[3])); // random client port
 	if (inet_pton(AF_INET, argv[1], &saddr.sin_addr) != 1)
 	{
 		printf("source IP configuration failed\n");
@@ -121,6 +128,7 @@ int main(int argc,char **argv) {
 	while (relativeTime <= timeToRun)
 	{
 		received = receive_from(sock, recvbuf, sizeof(recvbuf), &saddr);
+		fprintf(fptr,"%f, %d\n", relativeTime, received);
 		printf("successfully received %d bytes!\n", received);
 		read_seq_and_ack(recvbuf, &seq_num, &ack_num);
 		new_seq_num = seq_num + 1;
@@ -139,5 +147,6 @@ int main(int argc,char **argv) {
 
 
 	close(sock);
+	fclose(fptr);
 	return 0;
 }

@@ -124,7 +124,7 @@ int main(int argc, char** argv)
 	struct timeval currentTime;
 	double relativeTime=0;
 	int i = 0;
-	char request[] = "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
+	char request[] = "GET / HTTP/1.1\r\nHost: localhost\r safjdadjaskdkajsdjakfgasbdsdnfsdafsnvfbsdfsfsadhasndbasdbasndbasdbqyqqwbnadnsadwjjdnasdmnasdhasjdbdasnmbddsdafnnas,fsfhlkfjskfwefmnweweufgsdfnbsfbsddb,sadfnmsfbsdnfwehfweewnmefbsnmfsdfasf";
 	gettimeofday(&startTime,NULL);
     while (relativeTime <= timeToRun) {
 		// send data
@@ -157,7 +157,7 @@ int main(int argc, char** argv)
 
 		read_seq_and_ack(recvbuf, &seq_num, &ack_num);
 		new_seq_num = seq_num + 1;
-		sleep(1);
+		usleep(1000);
     }
 	
 	close(sock);

@@ -21,7 +21,7 @@ Run receiver(mobile/client)
 
 give any filename (i removed logging for debugging purposes)
 ```bash
-sudo ./receiver.out [source-ip] [target-ip] [dest-port] [duration] [filename]
+sudo ./receiver.out [source-ip] [target-ip] [src-port] [dest-port] [duration] [filename]
 ```
 
 The kernel does send a RST packet when it receives something to an
