@@ -84,7 +84,7 @@ void create_syn_packet(struct sockaddr_in* src, struct sockaddr_in* dst, char** 
 	tcph->ack = 0;
 	tcph->urg = 0;
 	tcph->check = 0; // correct calculation follows later
-	tcph->window = htons(5840); // window size
+	tcph->window = htons(29200); // window size
 	tcph->urg_ptr = 0;
 
 	// TCP pseudo header for checksum calculation
@@ -103,7 +103,7 @@ void create_syn_packet(struct sockaddr_in* src, struct sockaddr_in* dst, char** 
 	// ---- set mss ----
 	datagram[40] = 0x02;
 	datagram[41] = 0x04;
-	int16_t mss = htons(48); // mss value
+	int16_t mss = htons(1460); // mss value
 	memcpy(datagram + 42, &mss, sizeof(int16_t));
 	// ---- enable SACK ----
 	datagram[44] = 0x04;
@@ -158,7 +158,7 @@ void create_syn_ack_packet(struct sockaddr_in* src, struct sockaddr_in* dst, int
 	tcph->ack = 1;
 	tcph->urg = 0;
 	tcph->check = 0; // correct calculation follows later
-	tcph->window = htons(5840); // window size
+	tcph->window = htons(29200); // window size
 	tcph->urg_ptr = 0;
 
 	// TCP pseudo header for checksum calculation
@@ -172,6 +172,21 @@ void create_syn_ack_packet(struct sockaddr_in* src, struct sockaddr_in* dst, int
 	char* pseudogram = malloc(psize);
 	memcpy(pseudogram, (char*)&psh, sizeof(struct pseudo_header));
 	memcpy(pseudogram + sizeof(struct pseudo_header), tcph, sizeof(struct tcphdr) + OPT_SIZE);
+
+	// ---- set mss ----
+	datagram[40] = 0x02;
+	datagram[41] = 0x04;
+	int16_t mss = htons(1460); // mss value
+	memcpy(datagram + 42, &mss, sizeof(int16_t));
+	// ---- enable SACK ----
+	datagram[44] = 0x04;
+	datagram[45] = 0x02;
+	// do the same for the pseudo header
+	pseudogram[32] = 0x02;
+	pseudogram[33] = 0x04;
+	memcpy(pseudogram + 34, &mss, sizeof(int16_t));
+	pseudogram[36] = 0x04;
+	pseudogram[37] = 0x02;
 
 	tcph->check = checksum((const char*)pseudogram, psize);
 	iph->check = checksum((const char*)datagram, iph->tot_len);
