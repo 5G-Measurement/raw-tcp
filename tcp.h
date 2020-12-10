@@ -11,6 +11,7 @@
 #define DATAGRAM_LEN 4096
 #define OPT_SIZE 20
 #define OPT_SIZE_SYN 12
+#define OPT_SIZE_SYN_ACK 12
 typedef unsigned char BYTE;
 #define BUFFER_SIZE 50000
 
@@ -153,7 +154,7 @@ void create_syn_ack_packet(struct sockaddr_in* src, struct sockaddr_in* dst, int
 	iph->ihl = 5;
 	iph->version = 4;
 	iph->tos = 0;
-	iph->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + OPT_SIZE;
+	iph->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + OPT_SIZE_SYN_ACK;
 	iph->id = htonl(rand() % 65535); // id of this packet
 	iph->frag_off = 0;
 	iph->ttl = 64;
@@ -167,7 +168,7 @@ void create_syn_ack_packet(struct sockaddr_in* src, struct sockaddr_in* dst, int
 	tcph->dest = dst->sin_port;
 	tcph->seq = htonl(rand() % 4294967295);
 	tcph->ack_seq = htonl(ack_seq);
-	tcph->doff = 10; // tcp header size
+	tcph->doff = (sizeof(struct tcphdr) + OPT_SIZE_SYN_ACK) / 4; // tcp header size
 	tcph->fin = 0;
 	tcph->syn = 1;
 	tcph->rst = 0;
@@ -183,27 +184,43 @@ void create_syn_ack_packet(struct sockaddr_in* src, struct sockaddr_in* dst, int
 	psh.dest_address = dst->sin_addr.s_addr;
 	psh.placeholder = 0;
 	psh.protocol = IPPROTO_TCP;
-	psh.tcp_length = htons(sizeof(struct tcphdr) + OPT_SIZE);
-	int psize = sizeof(struct pseudo_header) + sizeof(struct tcphdr) + OPT_SIZE;
+	psh.tcp_length = htons(sizeof(struct tcphdr) + OPT_SIZE_SYN_ACK);
+	int psize = sizeof(struct pseudo_header) + sizeof(struct tcphdr) + OPT_SIZE_SYN_ACK;
 	// fill pseudo packet
 	char* pseudogram = malloc(psize);
 	memcpy(pseudogram, (char*)&psh, sizeof(struct pseudo_header));
-	memcpy(pseudogram + sizeof(struct pseudo_header), tcph, sizeof(struct tcphdr) + OPT_SIZE);
+	memcpy(pseudogram + sizeof(struct pseudo_header), tcph, sizeof(struct tcphdr) + OPT_SIZE_SYN_ACK);
 
 	// ---- set mss ----
 	datagram[40] = 0x02;
 	datagram[41] = 0x04;
 	int16_t mss = htons(1460); // mss value
-	memcpy(datagram + 42, &mss, sizeof(int16_t));
+	memcpy(datagram + 42, &mss, sizeof(int16_t)); // 42 and 43
+	// ---- 2 NOPs ----
+	datagram[44] = 0x01;
+	datagram[45] = 0x01;
 	// ---- enable SACK ----
-	datagram[44] = 0x04;
-	datagram[45] = 0x02;
+	datagram[46] = 0x04;
+	datagram[47] = 0x02;
+	// ----- NOP ------
+	datagram[48] = 0x01;
+	// ---- window-scaling -----
+	datagram[49] = 0x03;
+	datagram[50] = 0x03;
+	datagram[51] = 0x07;
+	
 	// do the same for the pseudo header
 	pseudogram[32] = 0x02;
 	pseudogram[33] = 0x04;
 	memcpy(pseudogram + 34, &mss, sizeof(int16_t));
-	pseudogram[36] = 0x04;
-	pseudogram[37] = 0x02;
+	pseudogram[36] = 0x01;
+	pseudogram[37] = 0x01;
+	pseudogram[38] = 0x04;
+	pseudogram[39] = 0x02;
+	pseudogram[40] = 0x01;
+	pseudogram[41] = 0x03;
+	pseudogram[42] = 0x03;
+	pseudogram[43] = 0x07;
 
 	tcph->check = checksum((const char*)pseudogram, psize);
 	iph->check = checksum((const char*)datagram, iph->tot_len);
