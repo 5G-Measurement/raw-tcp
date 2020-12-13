@@ -4,6 +4,34 @@
 
 As of now, the implementation works on local network but on a remote setup, when the sender sends the syn-ack packet, the client doesn't receive it.
 
+## NEW IMPLEMENTATION
+
+To clear all iptable rules to default:
+```bash
+sudo bash clear.sh
+```
+
+**setup**
+```bash
+make clean
+make
+```
+
+**receiver**
+```bash
+sudo iptables -A INPUT -p tcp -s [SERVER_IP] --sport [SERVER_PORT] -j DROP
+sudo ./new-receiver [source-ip] [source-port] [server-ip] [server-port] [duration] [filename]
+```
+
+**sender**
+```bash
+sudo iptables -A INPUT -p tcp --dport [SERVER_PORT] -j DROP
+sudo ./new-sender [listen-ip] [listen-port] [duration]
+```
+
+
+## OLD IMPLEMENTATION
+
 ## build and run
 
 ```bash
