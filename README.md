@@ -19,12 +19,14 @@ make
 
 **receiver**
 ```bash
+sudo iptables -I INPUT -s 192.168.10.12 -p tcp -m tcp --sport 45678 -j DROP
 sudo iptables -A INPUT -p tcp -s [SERVER_IP] --sport [SERVER_PORT] -j DROP
 sudo ./new-receiver [source-ip] [source-port] [server-ip] [server-port] [duration] [filename]
 ```
 
 **sender**
 ```bash
+sudo iptables -I INPUT -d 192.168.10.12 -p tcp -m tcp --dport 45678 -j DROP
 sudo iptables -A INPUT -p tcp --dport [SERVER_PORT] -j DROP
 sudo ./new-sender [listen-ip] [listen-port] [duration]
 ```

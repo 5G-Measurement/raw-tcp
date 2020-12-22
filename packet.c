@@ -49,7 +49,7 @@ void init_bpf(struct packet_info* packetinfo) {
 
 void init_packet(struct packet_info* packetinfo) {
 
-    packet_send_sd = socket(AF_INET , SOCK_RAW , IPPROTO_TCP);
+    packet_send_sd = socket(AF_INET , SOCK_RAW , IPPROTO_RAW);
     packet_recv_sd = socket(AF_PACKET , SOCK_DGRAM , htons(ETH_P_IP));
     // packet_recv_sd = socket(AF_INET , SOCK_RAW , IPPROTO_TCP);
     if(packet_send_sd == -1 || packet_recv_sd == -1) {
@@ -331,7 +331,7 @@ int send_packet(struct packet_info* packetinfo, char* source_payload, int source
     
     int ret = sendto (packet_send_sd, datagram, iph->tot_len ,  0, (struct sockaddr *) &sin, sizeof (sin));
 
-    // printf("[packet]Sent %d bytes packet.\n", ret);
+    printf("[packet]Sent %d bytes packet.\n", ret);
     if (flag < UINT_MAX - 2) {
         free(payload);
         if (!(packetinfo->disable_seq_update)) {
